@@ -16,6 +16,12 @@
 (rtm/send-event dispatcher {:type "ping"})
 ; got this: {:type pong, :reply_to 429753360}
 
+(defn send-typing-indicator [channel-id]
+  (rtm/send-event dispatcher {:id 1
+		                      :type "typing"
+		                      :channel channel-id}))
+
+
 
 
 
