@@ -21,6 +21,21 @@
 		                      :type "typing"
 		                      :channel channel-id}))
 
+(defn message-handler [message]
+  (let [text (:text message)
+		channel-id (:channel message)]
+    (println message)
+    (send-typing-indicator channel-id)
+    (cond
+      (str/includes? text "hello") (rtm/send-event dispatcher {:type "message"
+		                                                       :channel channel-id
+		                                                       :text "hello to you sir!"})
+      (str/includes? text "?") (rtm/send-event dispatcher {:type "message"
+		                                                   :channel channel-id
+		                                                   :text "No"}))))
+
+(rtm/sub-to-event events-pub :message message-handler)
+
 
 
 
