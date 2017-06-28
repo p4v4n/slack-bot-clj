@@ -1,6 +1,7 @@
 (ns slack-bot-clj.bot
     (:require [slack-rtm.core :as rtm]
-              [clojure.string :as str]))
+              [clojure.string :as str]
+              [clj-time.coerce :as timec]))
 
 (def API-TOKEN ((read-string (slurp "api-token.json")) "token"))
 
@@ -17,9 +18,15 @@
 
 (rtm/send-event dispatcher {:type "ping"})
 
-(def current-timestamp 0)
+(def current-timestamp (System/currentTimeMillis))
 
-;; Functions: 
+;;------------ Functions -------------- 
+
+(defn datetime-to-unix-time
+  [datetime]
+  (timec/to-long datetime))
+
+(println (datetime-to-unix-time (clj-time.core/date-time 2017 06 28 10 50 10)))
 
 (defn find-channel-by-name [channel-name]
   (->> (get-in rtm-conn [:start :channels])
@@ -52,11 +59,4 @@
       (str/starts-with? text "send") (stack-handler text))))
 
 (rtm/sub-to-event events-pub :message message-handler)
-
-
-
-
-
-
-
 
