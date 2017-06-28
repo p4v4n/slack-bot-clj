@@ -21,12 +21,15 @@
 (def current-timestamp (System/currentTimeMillis))
 
 ;;------------ Functions -------------- 
+(defn gmt-to-utc-timestamp [t]
+    (- t (* 330 60 1000)))
 
 (defn datestring-to-timestamp [date-str]
   (->> (str/split date-str #"\-")
        (map read-string)
        (apply clj-time.core/date-time)
-       timec/to-long))
+       timec/to-long
+       gmt-to-utc-timestamp))
 
 (defn find-channel-by-name [channel-name]
   (->> (get-in rtm-conn [:start :channels])
@@ -43,12 +46,12 @@
                                 :type "typing"
                                 :channel channel-id}))
 
-(defn stack-handler [text]
-    (let [[s send-time channel-name send-text] (str/split text #"\s+" 4)]
-      (swap! message-stack conj {:send-time send-time
+(defn add-to-stack [text]
+    (let [[s send-time channel-name core-text] (str/split text #"\s+" 4)]
+      (swap! message-stack conj {:send-time (datestring-to-timestamp send-time)
                                  :type "message"
                                  :channel (:id (find-channel-by-name channel-name))
-                                 :text send-text})))
+                                 :text core-text})))
 
 (defn message-handler [message]
   (let [text (:text message)
@@ -56,7 +59,7 @@
     (println message)
     (send-typing-indicator channel-id)
     (cond
-      (str/starts-with? text "send") (stack-handler text))))
+      (str/starts-with? text "send") (add-to-stack text))))
 
 (rtm/sub-to-event events-pub :message message-handler)
 
