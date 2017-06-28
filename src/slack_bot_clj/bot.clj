@@ -22,11 +22,11 @@
 
 ;;------------ Functions -------------- 
 
-(defn datetime-to-unix-time
-  [datetime]
-  (timec/to-long datetime))
-
-(println (datetime-to-unix-time (clj-time.core/date-time 2017 06 28 10 50 10)))
+(defn datestring-to-timestamp [date-str]
+  (->> (str/split date-str #"\-")
+       (map read-string)
+       (apply clj-time.core/date-time)
+       timec/to-long))
 
 (defn find-channel-by-name [channel-name]
   (->> (get-in rtm-conn [:start :channels])
@@ -34,9 +34,9 @@
        first))
 
 (defn find-user-by-name [user-name]
-    (->> (get-in rtm-conn [:start :users])
-         (filter #(= user-name (:name %)))
-         first))
+  (->> (get-in rtm-conn [:start :users])
+       (filter #(= user-name (:name %)))
+       first))
 
 (defn send-typing-indicator [channel-id]
     (rtm/send-event dispatcher {:id 1
