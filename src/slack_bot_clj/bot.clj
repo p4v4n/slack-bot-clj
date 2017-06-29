@@ -3,7 +3,7 @@
               [clojure.string :as str]
               [clj-time.coerce :as timec]))
 
-(def API-TOKEN ((read-string (slurp "api-token.json")) "token"))
+(def API-TOKEN (System/getenv "SLACK_API_TOKEN"))
 
 (def message-stack (atom []))
 
