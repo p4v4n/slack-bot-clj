@@ -1,1 +1,1 @@
-lein run
+worker: lein run
