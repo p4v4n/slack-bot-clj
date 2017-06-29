@@ -41,6 +41,20 @@
        (filter #(= user-name (:name %)))
        first))
 
+;;------------Input Sanitation---------
+(defn channel-check [channel-name]
+    (let [channel-info (find-channel-by-name channel-name)]
+      (if channel-info
+          (if (true? (:is_member channel-info))
+              true
+              "Sorry.Not a member of this channel.")
+          "Unable to find the channel-name in the list of public channels")))
+
+(defn time-check [time-str]
+    (if (re-find #"^(\d+\-){0,5}\d+$" time-str)
+         true
+        "Invalid Time"))
+;;---------------------------
 (defn send-typing-indicator [channel-id]
     (rtm/send-event dispatcher {:id 1
                                 :type "typing"
