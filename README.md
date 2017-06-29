@@ -1,36 +1,45 @@
 # slack-bot-clj
 
-FIXME: description
+A slack bot to store messages and post them on behalf of user at a later time.
 
 ## Installation
 
-Download from http://example.com/FIXME.
+#### Software requirements :
+
+- [Leiningen](https://leiningen.org/)
+- [slack-rtm](https://github.com/casidiablo/slack-rtm)
 
 ## Usage
 
-FIXME: explanation
+Create a slack-token for your bot [here](https://api.slack.com/tokens) and pass it to the _API-TOKEN_ variable in bot.clj.
 
-    $ java -jar slack-bot-clj-0.1.0-standalone.jar [args]
+    lein run
 
-## Options
+## Example
 
-FIXME: listing of options this app accepts.
+Send a private message to the bot with the following syntax
 
-## Examples
+```
+send [target-time] [target-channel] [target-text]
+```
 
-...
+The target-text will be posted by the bot in the target-channel at the target-time.
+
+*Note*: The target-time is currently set to match GMT.
+
+ex:
+
+```
+send 2017-07-15-08-10-15 bot-test Happy Independence Day
+```
 
 ### Bugs
 
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+Please file any issues you find on github with minimal sample code that demonstrates the problem.
 
 ## License
 
-Copyright © 2017 FIXME
+Copyright © 2017 p4v4n
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
