@@ -7,6 +7,8 @@
 
 (def message-stack (atom []))
 
+(def current-timestamp (atom 0))
+
 (def rtm-conn (rtm/start API-TOKEN))
 
 (def events-pub (:events-publication rtm-conn))
@@ -17,8 +19,6 @@
 (rtm/sub-to-event events-pub :pong pong-receiver)
 
 (rtm/send-event dispatcher {:type "ping"})
-
-(def current-timestamp (atom 0))
 
 ;;------------ Functions -------------- 
 (defn gmt-to-utc-timestamp [t]
@@ -51,7 +51,8 @@
       (swap! message-stack conj {:send-time (datestring-to-timestamp send-time)
                                  :type "message"
                                  :channel (:id (find-channel-by-name channel-name))
-                                 :text core-text})))
+                                 :text core-text})
+      (reset! message-stack (sort-by :send-time @message-stack))))
 
 (defn message-handler [message]
   (let [text (:text message)
@@ -68,7 +69,7 @@
 (defn time-watcher
   [keyy watched old-state new-state]
     (when (and (not-empty @message-stack) (> new-state (:send-time (first @message-stack))))
-        (rtm/send-event dispatcher (dissoc (first @message-stack :send-time)))
+        (rtm/send-event dispatcher (dissoc (first @message-stack) :send-time))
         (swap! message-stack rest)))
 
 (add-watch current-timestamp :time-watch time-watcher)
