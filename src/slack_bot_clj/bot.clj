@@ -18,7 +18,7 @@
 
 (rtm/send-event dispatcher {:type "ping"})
 
-(def current-timestamp (System/currentTimeMillis))
+(def current-timestamp (atom 0))
 
 ;;------------ Functions -------------- 
 (defn gmt-to-utc-timestamp [t]
@@ -63,3 +63,16 @@
 
 (rtm/sub-to-event events-pub :message message-handler)
 
+;;-----------Getting rid of message stack------------
+
+(defn time-watcher
+  [keyy watched old-state new-state]
+    (when (and (not-empty @message-stack) (> new-state (:send-time (first @message-stack))))
+        (rtm/send-event dispatcher (dissoc (first @message-stack :send-time)))
+        (swap! message-stack rest)))
+
+(add-watch current-timestamp :time-watch time-watcher)
+
+(while true
+    (Thread/sleep 10000)
+     (reset! current-timestamp (System/currentTimeMillis)))
