@@ -42,16 +42,15 @@
        first))
 
 ;;------------Input Sanitation---------
-(defn channel-check [channel-name]
-    (let [channel-info (find-channel-by-name channel-name)]
-      (if channel-info
-          (if (true? (:is_member channel-info))
-              true
-              "Sorry.Not a member of this channel.")
-          "Unable to find the channel-name in the list of public channels")))
 
-(defn time-check [time-str]
-    (if (re-find #"^(\d+\-){0,5}\d+$" time-str)
+(defn channel-exists? [channel-name]
+    (find-channel-by-name channel-name))
+
+(defn is-bot-channel-member? [channel-name]
+    (:is_member (find-channel-by-name channel-name)))
+
+(defn time-format-valid? [time-str]
+    (if (re-find #"^(\d+\-){0,6}\d+$" time-str)
          true
         "Invalid Time"))
 ;;---------------------------
