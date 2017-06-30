@@ -26,7 +26,7 @@
 
 (defn datestring-to-timestamp [date-str]
   (->> (str/split date-str #"\-")
-       (map read-string)
+       (map #(Integer/parseInt %))
        (apply clj-time.core/date-time)
        timec/to-long
        gmt-to-utc-timestamp))
