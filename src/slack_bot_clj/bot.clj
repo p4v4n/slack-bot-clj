@@ -82,16 +82,16 @@
     (send-typing-indicator channel-id)
     (cond
       (not= keyw "send") 
-          (send-message channel-id (format "Command %s doesn't exist" keyw))
+          (send-message channel-id (format "The command '%s' doesn't exist" keyw))
       (nil? (channel-exists? channel-name)) 
-          (send-message channel-id (format "The %s is not in the list of public channels." channel-name))
+          (send-message channel-id (format "The channel '%s' is not in the list of public channels." channel-name))
       (false? (is-bot-channel-member? channel-name)) 
-          (send-message channel-id (format "Sorry.I am not a member of $" channel-name))
+          (send-message channel-id (format "Sorry.I am not a member of the channel '%s'" channel-name))
       (false? (time-format-valid? send-time)) 
-          (send-message channel-id "The Time format is invalid.")
+          (send-message channel-id "The specified time format is invalid.")
       :else 
           (do
-            (send-message channel-id "Message added to stack.") 
+            (send-message channel-id "Message successfully added to stack.") 
             (add-to-stack text)))))
 
 (rtm/sub-to-event events-pub :message message-handler)
