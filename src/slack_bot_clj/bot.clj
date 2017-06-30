@@ -55,12 +55,16 @@
         "Invalid Time"))
 ;;---------------------------
 (defn send-typing-indicator [channel-id]
-    (rtm/send-event dispatcher {:id 1
-                                :type "typing"
+    (rtm/send-event dispatcher {:type "typing"
                                 :channel channel-id}))
 
+(defn send-message [channel-id text]
+    (rtm/send-event dispatcher {:type "message"
+                                :channel channel-id
+                                :text text}))
+
 (defn add-to-stack [text]
-    (let [[s send-time channel-name core-text] (str/split text #"\s+" 4)]
+    (let [[keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
       (swap! message-stack conj {:send-time (datestring-to-timestamp send-time)
                                  :type "message"
                                  :channel (:id (find-channel-by-name channel-name))
@@ -77,7 +81,7 @@
 
 (rtm/sub-to-event events-pub :message message-handler)
 
-;;-----------Getting rid of message stack------------
+;;-----------Clearing the message-stack------------
 
 (defn time-watcher
   [keyy watched old-state new-state]
