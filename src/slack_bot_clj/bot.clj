@@ -21,6 +21,7 @@
 (rtm/send-event dispatcher {:type "ping"})
 
 ;;------------ Functions -------------- 
+
 (defn gmt-to-utc-timestamp [t]
     (- t (* 330 60 1000)))
 
@@ -52,8 +53,9 @@
 (defn time-format-valid? [time-str]
     (if (re-find #"^(\d+\-){0,6}\d+$" time-str)
          true
-        "Invalid Time"))
+         false))
 ;;---------------------------
+
 (defn send-typing-indicator [channel-id]
     (rtm/send-event dispatcher {:type "typing"
                                 :channel channel-id}))
@@ -62,6 +64,7 @@
     (rtm/send-event dispatcher {:type "message"
                                 :channel channel-id
                                 :text text}))
+;;------------------------------
 
 (defn add-to-stack [text]
     (let [[keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
@@ -73,11 +76,23 @@
 
 (defn message-handler [message]
   (let [text (:text message)
-        channel-id (:channel message)]
+        channel-id (:channel message)
+        [keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
     (println message)
     (send-typing-indicator channel-id)
     (cond
-      (str/starts-with? text "send") (add-to-stack text))))
+      (not= keyw "send") 
+          (send-message channel-id (format "Command %s doesn't exist" keyw))
+      (nil? (channel-exists? channel-name)) 
+          (send-message channel-id (format "The %s is not in the list of public channels." channel-name))
+      (false? (is-bot-channel-member? channel-name)) 
+          (send-message channel-id (format "Sorry.I am not a member of $" channel-name))
+      (false? (time-format-valid? send-time)) 
+          (send-message channel-id "The Time format is invalid.")
+      :else 
+          (do
+            (send-message channel-id "Message added to stack.") 
+            (add-to-stack text)))))
 
 (rtm/sub-to-event events-pub :message message-handler)
 
