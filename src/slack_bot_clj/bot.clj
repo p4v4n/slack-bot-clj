@@ -1,7 +1,9 @@
 (ns slack-bot-clj.bot
     (:require [slack-rtm.core :as rtm]
               [clojure.string :as str]
-              [clj-time.coerce :as timec]))
+              [clj-time.coerce :as timec]
+              [clj-slack.chat :as chat]
+              [clj-slack.channels :as channels]))
 
 (def API-TOKEN (System/getenv "SLACK_API_TOKEN"))
 
@@ -18,7 +20,8 @@
 (def pong-receiver #(println "got this:" %))
 (rtm/sub-to-event events-pub :pong pong-receiver)
 
-(rtm/send-event dispatcher {:type "ping"})
+(def rest-connection {:api-url "https://slack.com/api" :token (System/getenv "SLACK_API_TOKEN")})
+;(rtm/send-event dispatcher {:type "ping"})
 
 ;;------------ Functions -------------- 
 
@@ -40,6 +43,11 @@
 (defn find-user-by-name [user-name]
   (->> (get-in rtm-conn [:start :users])
        (filter #(= user-name (:name %)))
+       first))
+
+(defn find-user-by-id [user-id]
+  (->> (get-in rtm-conn [:start :users])
+       (filter #(= user-id (:id %)))
        first))
 
 ;;------------Input Sanitation---------
@@ -66,22 +74,26 @@
                                 :text text}))
 ;;------------------------------
 
-(defn add-to-stack [text]
-    (let [[keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
+(defn add-to-stack [text user-id]
+    (let [user-info (find-user-by-id user-id)
+          [keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
       (swap! message-stack conj {:send-time (datestring-to-timestamp send-time)
                                  :type "message"
                                  :channel (:id (find-channel-by-name channel-name))
-                                 :text core-text})
+                                 :text core-text
+                                 :username (:name user-info)
+                                 :icon_url (:image_512 (:profile user-info))})
       (reset! message-stack (sort-by :send-time @message-stack))))
 
 (defn message-handler [message]
   (let [text (:text message)
         channel-id (:channel message)
+        user-id (:user message)
         [keyw send-time channel-name core-text] (str/split text #"\s+" 4)]
     (println message)
     (send-typing-indicator channel-id)
     (cond
-      (not= keyw "send") 
+      (and (not= keyw "") (not= keyw "send")) 
           (send-message channel-id (format "The command '%s' doesn't exist" keyw))
       (nil? (channel-exists? channel-name)) 
           (send-message channel-id (format "The channel '%s' is not in the list of public channels." channel-name))
@@ -91,8 +103,7 @@
           (send-message channel-id "The specified time format is invalid.")
       :else 
           (do
-            (send-message channel-id "Message successfully added to stack.") 
-            (add-to-stack text)))))
+            (add-to-stack text user-id)))))
 
 (rtm/sub-to-event events-pub :message message-handler)
 
@@ -101,7 +112,7 @@
 (defn time-watcher
   [keyy watched old-state new-state]
     (when (and (not-empty @message-stack) (> new-state (:send-time (first @message-stack))))
-        (rtm/send-event dispatcher (dissoc (first @message-stack) :send-time))
+        (chat/post-message rest-connection (:channel (first @message-stack)) (:text (first @message-stack)) (dissoc (first @message-stack) :send-time :channel :text :type))
         (swap! message-stack rest)))
 
 (add-watch current-timestamp :time-watch time-watcher)
