@@ -93,6 +93,7 @@
     (println message)
     (send-typing-indicator channel-id)
     (cond
+      (not (str/starts-with? channel-id "D")) nil
       (and (not= keyw "") (not= keyw "send")) 
           (send-message channel-id (format "The command '%s' doesn't exist" keyw))
       (nil? (channel-exists? channel-name)) 
