@@ -1,13 +1,12 @@
 (ns slack-bot-clj.bot
     (:require [slack-rtm.core :as rtm]
               [clojure.string :as str]
+              [clojure.data.json :as json]
               [clj-time.coerce :as timec]
               [clj-slack.chat :as chat]
               [clj-slack.channels :as channels]))
 
 (def API-TOKEN (System/getenv "SLACK_API_TOKEN"))
-
-(def message-stack (atom []))
 
 (def current-timestamp (atom 0))
 
@@ -22,6 +21,16 @@
 
 (def rest-connection {:api-url "https://slack.com/api" :token (System/getenv "SLACK_API_TOKEN")})
 ;(rtm/send-event dispatcher {:type "ping"})
+
+;;--------From and to json file------
+
+(defn write-to-json-file [x]
+  (spit "m-stack.json" (json/write-str x)))
+
+(defn read-from-json-file []
+  (json/read-str (slurp "m-stack.json")))
+
+(def message-stack (atom (read-from-json-file)))
 
 ;;------------ Functions -------------- 
 
@@ -82,8 +91,9 @@
                                  :channel (:id (find-channel-by-name channel-name))
                                  :text core-text
                                  :username (:name user-info)
-                                 :icon_url (:image_512 (:profile user-info))})
-      (reset! message-stack (sort-by :send-time @message-stack))))
+                                 :icon_url (:image_512 (:profile user-info))}))
+    (reset! message-stack (sort-by :send-time @message-stack))
+    (write-to-json-file @message-stack))
 
 (defn message-handler [message]
   (let [text (:text message)
@@ -114,7 +124,8 @@
   [keyy watched old-state new-state]
     (when (and (not-empty @message-stack) (> new-state (:send-time (first @message-stack))))
         (chat/post-message rest-connection (:channel (first @message-stack)) (:text (first @message-stack)) (dissoc (first @message-stack) :send-time :channel :text :type))
-        (swap! message-stack rest)))
+        (swap! message-stack rest)
+        (write-to-json-file @message-stack)))
 
 (add-watch current-timestamp :time-watch time-watcher)
 
