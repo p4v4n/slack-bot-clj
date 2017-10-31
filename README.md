@@ -17,7 +17,7 @@ Create a slack-token for your bot [here](https://api.slack.com/tokens) and pass 
 
 ## Example
 
-Send a private message to the bot with the following syntax
+Send a private message to the bot with the following type
 
 ```
 send [target-time] [target-channel] [target-text]
@@ -25,7 +25,7 @@ send [target-time] [target-channel] [target-text]
 
 The target-text will be posted by the bot in the target-channel at the target-time.
 
-*Note*: The target-time is currently set to match GMT.
+*Note*: The target-time is currently set to match GMT
 
 ex:
 
